@@ -3,4 +3,5 @@ using Lockbox.Test;
 
 
 var test = new PdfExtractor();
-test.Execute();
+Task<bool> task = test.Execute();
+task.Wait();
