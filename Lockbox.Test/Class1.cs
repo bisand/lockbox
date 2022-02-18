@@ -4,7 +4,7 @@ namespace Lockbox.Test;
 
 public class PdfExtractor
 {
-    public bool async Execute()
+    public async Task<bool> Execute()
     {
         Console.WriteLine("Hello, World!");
         var options = new LaunchOptions
