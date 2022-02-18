@@ -26,11 +26,6 @@ public class PdfExtractor
             await page.PdfAsync(Path.Combine(Directory.GetCurrentDirectory(), "google.pdf"));
 
             Console.WriteLine("Export completed");
-
-            if (!args.Any(arg => arg == "auto-exit"))
-            {
-                Console.ReadLine();
-            }
         }
 
         return true;
