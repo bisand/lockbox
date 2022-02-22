@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine as base
 
 # Installs latest Chromium (92) package.
 RUN apk add --no-cache \
@@ -8,6 +8,13 @@ RUN apk add --no-cache \
       harfbuzz \
       ca-certificates \
       ttf-freefont
+
+FROM base as build
+
+# Install .net dependencies
+RUN apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
+
+FROM base as prod
 
 # Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
