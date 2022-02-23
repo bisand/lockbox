@@ -1,3 +1,5 @@
+ARG DOTNET_VERSION=6.0.102
+
 FROM alpine as base
 
 # Installs latest Chromium (92) package.
@@ -9,12 +11,8 @@ RUN apk add --no-cache \
       ca-certificates \
       ttf-freefont
 
-FROM base as build
-
 # Install .net dependencies
 RUN apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
-
-FROM base as prod
 
 # Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -29,6 +27,22 @@ RUN addgroup -S pptruser && adduser -S -g pptruser pptruser \
     && chown -R pptruser:pptruser /home/pptruser \
     && chown -R pptruser:pptruser /app
 
+FROM base as build
+ENV DOTNET_VER=$DOTNET_VERSION
+RUN wget https://dot.net/v1/dotnet-install.sh
+RUN chmod +x ./dotnet-install.sh
+RUN ./dotnet-install.sh --version 6.0.102
+
+FROM base as runtime
+ENV DOTNET_VER=$DOTNET_VERSION
+RUN wget https://dot.net/v1/dotnet-install.sh
+RUN chmod +x ./dotnet-install.sh
+RUN ./dotnet-install.sh --runtime --version 6.0.102
+
+FROM build as runtime-builder
+
+FROM runtime
+COPY --from=runtime-builder /build /app
 # Run everything after as non-privileged user.
 
 # Create app directory
