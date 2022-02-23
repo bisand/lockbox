@@ -9,12 +9,13 @@ public class PdfExtractor
         Console.WriteLine("Hello, World!");
         var options = new LaunchOptions
         {
-            Headless = true
+            Headless = true,
+            Args = new string[] { "--cap-add=SYS_ADMIN", "--no-sandbox" }
         };
 
-        Console.WriteLine("Downloading chromium");
-        using var browserFetcher = new BrowserFetcher();
-        await browserFetcher.DownloadAsync();
+        // Console.WriteLine("Downloading chromium");
+        // using var browserFetcher = new BrowserFetcher();
+        // await browserFetcher.DownloadAsync();
 
         Console.WriteLine("Navigating google");
         using (var browser = await Puppeteer.LaunchAsync(options))

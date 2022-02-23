@@ -1,5 +1,3 @@
-ARG DOTNET_VERSION=6.0.102
-
 FROM alpine as base
 
 # Installs latest Chromium (92) package.
@@ -28,43 +26,36 @@ RUN addgroup -S pptruser && adduser -S -g pptruser pptruser \
     && chown -R pptruser:pptruser /app
 
 FROM base as build
-ENV DOTNET_VER=$DOTNET_VERSION
 RUN wget https://dot.net/v1/dotnet-install.sh
 RUN chmod +x ./dotnet-install.sh
-RUN ./dotnet-install.sh --version 6.0.102
+RUN sed -i "s|--waitretry 2||g" dotnet-install.sh
+RUN sed -i "s|--connect-timeout 15||g" dotnet-install.sh
+RUN ./dotnet-install.sh
 
 FROM base as runtime
-ENV DOTNET_VER=$DOTNET_VERSION
 RUN wget https://dot.net/v1/dotnet-install.sh
 RUN chmod +x ./dotnet-install.sh
-RUN ./dotnet-install.sh --runtime --version 6.0.102
+RUN sed -i "s|--waitretry 2||g" dotnet-install.sh
+RUN sed -i "s|--connect-timeout 15||g" dotnet-install.sh
+RUN ./dotnet-install.sh --runtime dotnet --install-dir /home/pptruser/.dotnet
+ENV DOTNET_ROOT=/home/pptruser/.dotnet
 
 FROM build as runtime-builder
+COPY . /src
+RUN mkdir /build
+WORKDIR /src
+# RUN /root/.dotnet/dotnet restore /src/Lockbox.Shell/Lockbox.Shell.csproj
+RUN /root/.dotnet/dotnet publish /src/Lockbox.Shell/Lockbox.Shell.csproj --output /build 
 
 FROM runtime
-COPY --from=runtime-builder /build /app
+COPY --from=runtime-builder /build /home/pptruser/app
 # Run everything after as non-privileged user.
 
 # Create app directory
-WORKDIR /home/pptruser
-
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
-
-# RUN npm install
-# If you are building your code for production
-RUN npm install --production
-
-# Bundle app source
-COPY . .
-
-RUN mv client_dist public
-RUN mv server_dist server
+WORKDIR /home/pptruser/app
 
 RUN chown -R pptruser:pptruser /home/pptruser
-USER pptruser
+# USER pptruser
 
 EXPOSE 4000
-CMD [ "node", "server/index.js" ]
+CMD [ "./Lockbox.Shell" ]
